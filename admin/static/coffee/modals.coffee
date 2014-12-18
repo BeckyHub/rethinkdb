@@ -522,28 +522,43 @@ module 'Modals', ->
 
         get_errors: =>
             errors = []
-            if @model.get('num_shards') == 0
+            num_shards = @model.get('num_shards')
+            num_replicas = @model.get('num_replicas_per_shard')
+            num_servers = @model.get('num_servers')
+            num_default_servers = @model.get('num_default_servers')
+
+            # check shard errors
+            if num_shards == 0
                 errors.push 'zero-shards'
-            else if isNaN @model.get('num_shards')
+            else if isNaN num_shards
                 errors.push 'no-shards'
-            if @model.get('num_replicas_per_shard') == 0
+            else if num_shards > num_default_servers
+                if num_shards > num_servers
+                    errors.push 'too-many-shards'
+                else
+                    errors.push 'not-enough-defaults-shard'
+
+            # check replicas per shard errors
+            if num_replicas == 0
                 errors.push 'zero-replicas'
-            else if isNaN @model.get('num_replicas_per_shard')
+            else if isNaN num_replicas
                 errors.push 'no-replicas'
-            if @model.get('num_shards') > @model.get('max_shards')
-                errors.push 'too-many-shards'
-            if @model.get('num_replicas_per_shard') >
-              @model.get('max_replicas_per_shard')
-                errors.push 'too-many-replicas'
+            else if num_replicas > num_default_servers
+                if num_replicas > num_servers
+                    errors.push 'too-many-replicas'
+                else
+                    errors.push 'not-enough-defaults-replica'
+
+            # check for server error
             if @model.get('server_error')?
                 errors.push 'server-error'
-            console.log errors
+
             @model.set errors: errors
             if errors.length > 0
                 @model.set shards: []
             errors.length > 0
-                
-            
+
+
 
         fetch_dryrun: =>
             if @get_errors()

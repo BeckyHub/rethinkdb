@@ -15,7 +15,7 @@
              value="{{num_shards}}"></input>
       <span class="caption">shards</span>
       <div class="max caption">
-        max: {{max_shards}}
+        max: {{num_default_servers}}
       </div>
     </div>
     <div>
@@ -23,7 +23,7 @@
              value="{{num_replicas_per_shard}}"></input>
       <span class="caption">replicas per shard</span>
       <div class="max caption">
-        max: {{max_replicas_per_shard}}
+        max: {{num_default_servers}}
       </div>
     </div>
     <button class="apply btn-primary btn">Apply configuration</button>
@@ -43,11 +43,21 @@
     The number of replicas per shard is not set.
   </p>
   <p class="error too-many-shards">
-    A table may have at most {{max_shards}} shards.
+    A table may have at most {{num_default_servers}} shards.
+  </p>
+  <p class="error not-enough-defaults-shard">
+    While you have enough servers for this many shards, not enough of
+    them have the "default" tag.  You can manage server tags through
+    the table "rethinkdb.server_config".
+  </p>
+  <p class="error not-enough-defaults-replica">
+    While you have enough servers for this many replicas, not enough
+    of them have the "default" tag. You can manage server tags through
+    the table "rethinkdb.server_config".
   </p>
   <p class="error too-many-replicas">
-    A table cannot have more than {{max_replicas_per_shard}} replicas 
-    per shard.
+    A table cannot have more than {{num_default_servers}} replicas per
+    shard.
   </p>
   <p class="error server-error">
     The server returned the following error:

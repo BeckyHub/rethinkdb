@@ -24,16 +24,18 @@ module 'TableView', ->
             query =
                 r.do(
                     r.db(system_db).table('server_config').coerceTo('array'),
-                    r.db(system_db).table('server_config').count(),
                     r.db(system_db).table('table_status').get(this_id),
                     r.db(system_db).table('table_config').get(this_id),
-                    (server_config, num_servers, table, table_config) ->
+                    (server_config, table, table_config) ->
                         r.branch(
                             table.eq(null),
                             null,
                             table.merge(
-                                num_shards: table("shards").count()
                                 max_shards: 32
+                                num_shards: table("shards").count()
+                                num_servers: server_config.count()
+                                num_default_servers: server_config.filter((server) ->
+                                    server('tags').contains('default')).count()
                                 # TODO: replace with primary once "director" is out
                                 num_available_shards: table("shards").filter((shard) ->
                                     shard('replicas')(shard('replicas')('server').indexesOf(shard('director'))(0))('state').eq('ready')
@@ -41,7 +43,6 @@ module 'TableView', ->
                                 num_replicas: table("shards").concatMap( (shard) -> shard('replicas')).count()
                                 num_available_replicas: table("shards").concatMap((shard) ->
                                     shard('replicas').filter({state: "ready"})).count()
-                                max_replicas_per_shard: num_servers
                                 num_replicas_per_shard: table("shards").map((shard) -> shard('replicas').count()).max()
                                 status: table('status')
                                 shards_assignments: table_config("shards").map(r.range(), (shard, position) ->
@@ -392,10 +393,11 @@ module 'TableView', ->
                     name: @model.get('name')
                     total_keys: @model.get('total_keys')
                     shards: []
-                    num_shards: @model.get('num_shards')
                     max_shards: @model.get('max_shards')
+                    num_shards: @model.get('num_shards')
+                    num_servers: @model.get('num_servers')
+                    num_default_servers: @model.get('num_default_servers')
                     num_replicas_per_shard: @model.get('num_replicas_per_shard')
-                    max_replicas_per_shard: @model.get('max_replicas_per_shard')
             @reconfigure_modal.render()
 
         remove: =>
@@ -668,7 +670,7 @@ module 'TableView', ->
             @$('.add_index_li').slideDown 'fast'
             @$('.create_container').slideUp 'fast'
             @$('.new_index_name').focus()
-        
+
         # Hide the form to add a secondary index
         hide_add_index: =>
             @$('.add_index_li').slideUp 'fast'
@@ -683,7 +685,7 @@ module 'TableView', ->
             else if event.which is 27 # ESC
                 event.preventDefault()
                 @hide_add_index()
-       
+
         on_fail_to_connect: =>
             @loading = false
             @render_error
@@ -724,7 +726,7 @@ module 'TableView', ->
                 @deleting_secondary_index = null
             event.preventDefault()
             $(event.target).parent().slideUp 'fast'
-        
+
         remove: =>
             @stopListening()
             for view in @indexes_view
