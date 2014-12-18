@@ -509,7 +509,7 @@ module 'Modals', ->
                 .update {shards: new_shards}, {returnChanges: true}
             driver.run_once query, (error, result) =>
                 if error?
-                    @model.set error: error.msg
+                    @model.set server_error: error.msg
                 else
                     @reset_buttons()
                     @remove()

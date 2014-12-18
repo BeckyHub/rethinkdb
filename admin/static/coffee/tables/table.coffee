@@ -243,8 +243,6 @@ module 'TableView', ->
             @secondary_indexes_view = new TableView.SecondaryIndexesView
                 collection: @indexes
                 model: @model
-            #@replicas = new TableView.Replicas
-            #    model: @model
             @shards = new TableView.Sharding
                 collection: @distribution
                 model: @model
@@ -294,9 +292,6 @@ module 'TableView', ->
             @$('.profile').html @profile.render().$el
 
             @$('.performance-graph').html @performance_graph.render().$el
-
-            # Display the replicas
-            #@$('.replication').html @replicas.render().el
 
             # Display the shards
             @$('.sharding').html @shards.render().el
